@@ -478,6 +478,9 @@ func (r *SiteVerificationResource) patchSiteVerification(ctx context.Context, di
 }
 
 func (r *SiteVerificationResource) deleteSiteVerification(ctx context.Context, data *SiteVerificationResourceModel) error {
-	tflog.Trace(ctx, "Deleting site verification for id", map[string]any{"id": data.ID.ValueString()})
-	return r.Clients.SiteVerification.WebResource.Delete(data.SiteIdentifier.ValueString()).Context(ctx).Do()
+	tflog.Trace(ctx, "Deleting site verification for id", map[string]any{
+		"id":   data.ID.ValueString(),
+		"site": data.SiteIdentifier.ValueString(),
+	})
+	return r.Clients.SiteVerification.WebResource.Delete(data.EncodedID()).Context(ctx).Do()
 }
