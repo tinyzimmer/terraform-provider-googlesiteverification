@@ -22,14 +22,6 @@ func stringSliceToListValue(vals []string) (basetypes.ListValue, diag.Diagnostic
 	return types.ListValue(types.StringType, listVals)
 }
 
-func stringSliceToQuotedListValue(vals []string) (basetypes.ListValue, diag.Diagnostics) {
-	var listVals []attr.Value
-	for _, val := range vals {
-		listVals = append(listVals, types.StringValue(fmt.Sprintf("%q", val)))
-	}
-	return types.ListValue(types.StringType, listVals)
-}
-
 func listValueToStringSlice(ctx context.Context, list basetypes.ListValue) ([]string, error) {
 	var vals []string
 	for _, elem := range list.Elements() {
