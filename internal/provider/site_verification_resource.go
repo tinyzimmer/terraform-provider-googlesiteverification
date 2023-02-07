@@ -385,7 +385,7 @@ func (r *SiteVerificationResource) insertSiteVerification(ctx context.Context, d
 		"id":   data.ID.String(),
 		"site": data.SiteIdentifier.ValueString(),
 	})
-	greq, err := r.buildSiteVerification(ctx, data)
+	greq, err := r.buildSiteVerification(ctx, data, true)
 	if err != nil {
 		return err
 	}
@@ -439,7 +439,7 @@ func (r *SiteVerificationResource) patchSiteVerification(ctx context.Context, di
 		"id":   data.ID.String(),
 		"site": data.SiteIdentifier.ValueString(),
 	})
-	greq, err := r.buildSiteVerification(ctx, data)
+	greq, err := r.buildSiteVerification(ctx, data, false)
 	if err != nil {
 		return err
 	}
@@ -461,12 +461,13 @@ func (r *SiteVerificationResource) patchSiteVerification(ctx context.Context, di
 	return nil
 }
 
-func (r *SiteVerificationResource) buildSiteVerification(ctx context.Context, data *SiteVerificationResourceModel) (*sitev1.SiteVerificationWebResourceResource, error) {
-	greq := &sitev1.SiteVerificationWebResourceResource{
-		Site: &sitev1.SiteVerificationWebResourceResourceSite{
-			Identifier: strings.TrimSuffix(data.SiteIdentifier.ValueString(), "."),
+func (r *SiteVerificationResource) buildSiteVerification(ctx context.Context, data *SiteVerificationResourceModel, includeSite bool) (*sitev1.SiteVerificationWebResourceResource, error) {
+	greq := &sitev1.SiteVerificationWebResourceResource{}
+	if includeSite {
+		greq.Site = &sitev1.SiteVerificationWebResourceResourceSite{
+			Identifier: data.SiteID(),
 			Type:       data.SiteType.ValueString(),
-		},
+		}
 	}
 	if r.Clients.DefaultOwner != "" {
 		greq.Owners = append(greq.Owners, r.Clients.DefaultOwner)
