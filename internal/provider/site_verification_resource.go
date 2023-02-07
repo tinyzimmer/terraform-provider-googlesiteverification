@@ -469,9 +469,6 @@ func (r *SiteVerificationResource) buildSiteVerification(ctx context.Context, da
 			Type:       data.SiteType.ValueString(),
 		}
 	}
-	// if r.Clients.DefaultOwner != "" {
-	// 	greq.Owners = append(greq.Owners, r.Clients.DefaultOwner)
-	// }
 	if !data.Owners.IsNull() {
 		owners, err := parseOwnersFromData(ctx, data)
 		if err != nil {

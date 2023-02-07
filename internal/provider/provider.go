@@ -16,7 +16,6 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	dnsv2 "google.golang.org/api/dns/v2"
-	oauthv2 "google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
 	sitev1 "google.golang.org/api/siteverification/v1"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -42,7 +41,6 @@ type GoogleSiteVerificationProviderModel struct {
 
 type SiteVerificationClients struct {
 	ProjectID        string
-	DefaultOwner     string
 	SiteVerification *sitev1.Service
 	DNS              *dnsv2.Service
 }
@@ -82,8 +80,6 @@ func (p *GoogleSiteVerificationProvider) Configure(ctx context.Context, req prov
 		return
 	}
 
-	var defaultOwner string
-
 	tflog.Trace(ctx, "Attempting to load default credentials")
 	defaultCreds, err := google.FindDefaultCredentials(ctx)
 	if err != nil {
@@ -92,7 +88,6 @@ func (p *GoogleSiteVerificationProvider) Configure(ctx context.Context, req prov
 	}
 	creds := defaultCreds
 	if !data.ImpersonateServiceAccount.IsNull() {
-		defaultOwner = data.ImpersonateServiceAccount.ValueString()
 		duration := int64(3600)
 		if !data.TokenDuration.IsNull() {
 			duration = data.TokenDuration.ValueInt64()
@@ -106,21 +101,6 @@ func (p *GoogleSiteVerificationProvider) Configure(ctx context.Context, req prov
 	if !data.Project.IsNull() {
 		defaultCreds.ProjectID = data.Project.String()
 		creds.ProjectID = data.Project.String()
-	}
-
-	// Get site verification default identity
-	if defaultOwner == "" {
-		oauth2Service, err := oauthv2.NewService(ctx, option.WithCredentials(creds), option.WithScopes(oauthv2.OpenIDScope))
-		if err != nil {
-			resp.Diagnostics.AddError("Failed to create oauth2 client", err.Error())
-			return
-		}
-		tokenInfo, err := oauth2Service.Tokeninfo().Context(ctx).Do()
-		if err != nil {
-			resp.Diagnostics.AddError("Failed to get token info", err.Error())
-			return
-		}
-		defaultOwner = tokenInfo.Email
 	}
 
 	siteverificationService, err := sitev1.NewService(ctx,
@@ -140,7 +120,6 @@ func (p *GoogleSiteVerificationProvider) Configure(ctx context.Context, req prov
 
 	clients := &SiteVerificationClients{
 		ProjectID:        creds.ProjectID,
-		DefaultOwner:     defaultOwner,
 		SiteVerification: siteverificationService,
 		DNS:              dnsservice,
 	}
