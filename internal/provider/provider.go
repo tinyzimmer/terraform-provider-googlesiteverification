@@ -86,6 +86,10 @@ func (p *GoogleSiteVerificationProvider) Configure(ctx context.Context, req prov
 
 	tflog.Trace(ctx, "Attempting to load default credentials")
 	defaultCreds, err := google.FindDefaultCredentials(ctx)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to load default credentials", err.Error())
+		return
+	}
 	creds := defaultCreds
 	if !data.ImpersonateServiceAccount.IsNull() {
 		defaultOwner = data.ImpersonateServiceAccount.ValueString()
