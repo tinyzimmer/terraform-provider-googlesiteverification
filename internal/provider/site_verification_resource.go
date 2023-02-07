@@ -381,19 +381,9 @@ func (r *SiteVerificationResource) insertSiteVerification(ctx context.Context, d
 		"id":   data.ID.String(),
 		"site": data.SiteIdentifier.ValueString(),
 	})
-	greq := &sitev1.SiteVerificationWebResourceResource{
-		Owners: []string{r.Clients.DefaultOwner},
-		Site: &sitev1.SiteVerificationWebResourceResourceSite{
-			Identifier: data.SiteIdentifier.ValueString(),
-			Type:       data.SiteType.ValueString(),
-		},
-	}
-	if !data.Owners.IsNull() {
-		owners, err := parseOwnersFromData(ctx, data)
-		if err != nil {
-			return err
-		}
-		greq.Owners = append(greq.Owners, owners...)
+	greq, err := r.buildSiteVerification(ctx, data)
+	if err != nil {
+		return err
 	}
 	tflog.Trace(ctx, "Request", map[string]any{
 		"request": greq,
@@ -445,19 +435,9 @@ func (r *SiteVerificationResource) patchSiteVerification(ctx context.Context, di
 		"id":   data.ID.String(),
 		"site": data.SiteIdentifier.ValueString(),
 	})
-	greq := &sitev1.SiteVerificationWebResourceResource{
-		Owners: []string{r.Clients.DefaultOwner},
-		Site: &sitev1.SiteVerificationWebResourceResourceSite{
-			Identifier: data.SiteIdentifier.ValueString(),
-			Type:       data.SiteType.ValueString(),
-		},
-	}
-	if !data.Owners.IsNull() {
-		owners, err := parseOwnersFromData(ctx, data)
-		if err != nil {
-			return err
-		}
-		greq.Owners = append(greq.Owners, owners...)
+	greq, err := r.buildSiteVerification(ctx, data)
+	if err != nil {
+		return err
 	}
 	tflog.Trace(ctx, "Request", map[string]any{
 		"request": greq,
@@ -475,6 +455,27 @@ func (r *SiteVerificationResource) patchSiteVerification(ctx context.Context, di
 	diag.Append(diags...)
 	data.Owners = owns
 	return nil
+}
+
+func (r *SiteVerificationResource) buildSiteVerification(ctx context.Context, data *SiteVerificationResourceModel) (*sitev1.SiteVerificationWebResourceResource, error) {
+	greq := &sitev1.SiteVerificationWebResourceResource{
+		Owners: []string{},
+		Site: &sitev1.SiteVerificationWebResourceResourceSite{
+			Identifier: data.SiteIdentifier.ValueString(),
+			Type:       data.SiteType.ValueString(),
+		},
+	}
+	if r.Clients.DefaultOwner != "" {
+		greq.Owners = append(greq.Owners, r.Clients.DefaultOwner)
+	}
+	if !data.Owners.IsNull() {
+		owners, err := parseOwnersFromData(ctx, data)
+		if err != nil {
+			return nil, err
+		}
+		greq.Owners = append(greq.Owners, owners...)
+	}
+	return greq, nil
 }
 
 func (r *SiteVerificationResource) deleteSiteVerification(ctx context.Context, data *SiteVerificationResourceModel) error {

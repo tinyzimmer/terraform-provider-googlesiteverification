@@ -82,10 +82,13 @@ func (p *GoogleSiteVerificationProvider) Configure(ctx context.Context, req prov
 		return
 	}
 
+	var defaultOwner string
+
 	tflog.Trace(ctx, "Attempting to load default credentials")
 	defaultCreds, err := google.FindDefaultCredentials(ctx)
 	creds := defaultCreds
 	if !data.ImpersonateServiceAccount.IsNull() {
+		defaultOwner = data.ImpersonateServiceAccount.ValueString()
 		duration := int64(3600)
 		if !data.TokenDuration.IsNull() {
 			duration = data.TokenDuration.ValueInt64()
@@ -102,15 +105,18 @@ func (p *GoogleSiteVerificationProvider) Configure(ctx context.Context, req prov
 	}
 
 	// Get site verification default identity
-	oauth2Service, err := oauthv2.NewService(ctx, option.WithCredentials(creds), option.WithScopes(oauthv2.OpenIDScope))
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to create oauth2 client", err.Error())
-		return
-	}
-	tokenInfo, err := oauth2Service.Tokeninfo().Context(ctx).Do()
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to get token info", err.Error())
-		return
+	if defaultOwner == "" {
+		oauth2Service, err := oauthv2.NewService(ctx, option.WithCredentials(creds), option.WithScopes(oauthv2.OpenIDScope))
+		if err != nil {
+			resp.Diagnostics.AddError("Failed to create oauth2 client", err.Error())
+			return
+		}
+		tokenInfo, err := oauth2Service.Tokeninfo().Context(ctx).Do()
+		if err != nil {
+			resp.Diagnostics.AddError("Failed to get token info", err.Error())
+			return
+		}
+		defaultOwner = tokenInfo.Email
 	}
 
 	siteverificationService, err := sitev1.NewService(ctx,
@@ -130,7 +136,7 @@ func (p *GoogleSiteVerificationProvider) Configure(ctx context.Context, req prov
 
 	clients := &SiteVerificationClients{
 		ProjectID:        creds.ProjectID,
-		DefaultOwner:     tokenInfo.Email,
+		DefaultOwner:     defaultOwner,
 		SiteVerification: siteverificationService,
 		DNS:              dnsservice,
 	}
