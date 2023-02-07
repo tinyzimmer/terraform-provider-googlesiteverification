@@ -465,13 +465,13 @@ func (r *SiteVerificationResource) buildSiteVerification(ctx context.Context, da
 	greq := &sitev1.SiteVerificationWebResourceResource{}
 	if includeSite {
 		greq.Site = &sitev1.SiteVerificationWebResourceResourceSite{
-			Identifier: data.SiteID(),
+			Identifier: data.SiteIdentifier.ValueString(),
 			Type:       data.SiteType.ValueString(),
 		}
 	}
-	if r.Clients.DefaultOwner != "" {
-		greq.Owners = append(greq.Owners, r.Clients.DefaultOwner)
-	}
+	// if r.Clients.DefaultOwner != "" {
+	// 	greq.Owners = append(greq.Owners, r.Clients.DefaultOwner)
+	// }
 	if !data.Owners.IsNull() {
 		owners, err := parseOwnersFromData(ctx, data)
 		if err != nil {
