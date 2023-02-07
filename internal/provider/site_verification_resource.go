@@ -265,7 +265,6 @@ func (r *SiteVerificationResource) Update(ctx context.Context, req resource.Upda
 	err := r.patchSiteVerification(ctx, resp.Diagnostics, data)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating site verification", err.Error())
-		return
 	}
 
 	// Save updated data into Terraform state
@@ -293,11 +292,9 @@ func (r *SiteVerificationResource) Delete(ctx context.Context, req resource.Dele
 		}
 	}
 
-	tflog.Trace(ctx, "Deleting site verification for id", map[string]any{"id": data.ID})
-	err := r.Clients.SiteVerification.WebResource.Delete(data.SiteIdentifier.ValueString()).Context(ctx).Do()
+	err := r.deleteSiteVerification(ctx, data)
 	if err != nil {
 		resp.Diagnostics.AddError("Error relinquishing site verification", err.Error())
-		return
 	}
 }
 
@@ -478,4 +475,9 @@ func (r *SiteVerificationResource) patchSiteVerification(ctx context.Context, di
 	diag.Append(diags...)
 	data.Owners = owns
 	return nil
+}
+
+func (r *SiteVerificationResource) deleteSiteVerification(ctx context.Context, data *SiteVerificationResourceModel) error {
+	tflog.Trace(ctx, "Deleting site verification for id", map[string]any{"id": data.ID.ValueString()})
+	return r.Clients.SiteVerification.WebResource.Delete(data.SiteIdentifier.ValueString()).Context(ctx).Do()
 }
