@@ -459,7 +459,6 @@ func (r *SiteVerificationResource) patchSiteVerification(ctx context.Context, di
 
 func (r *SiteVerificationResource) buildSiteVerification(ctx context.Context, data *SiteVerificationResourceModel) (*sitev1.SiteVerificationWebResourceResource, error) {
 	greq := &sitev1.SiteVerificationWebResourceResource{
-		Owners: []string{},
 		Site: &sitev1.SiteVerificationWebResourceResourceSite{
 			Identifier: data.SiteIdentifier.ValueString(),
 			Type:       data.SiteType.ValueString(),
