@@ -49,6 +49,10 @@ func (s *SiteVerificationResourceModel) EncodedID() string {
 	return url.PathEscape(s.ID.ValueString())
 }
 
+func (s *SiteVerificationResourceModel) SiteID() string {
+	return strings.TrimSuffix(s.SiteIdentifier.ValueString(), ".")
+}
+
 func (r *SiteVerificationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_site_verification"
 }
@@ -416,7 +420,7 @@ func (r *SiteVerificationResource) readSiteVerification(ctx context.Context, dia
 		"id":   data.ID.String(),
 		"site": data.SiteIdentifier.ValueString(),
 	})
-	resp, err := r.Clients.SiteVerification.WebResource.Get(data.SiteIdentifier.ValueString()).Context(ctx).Do()
+	resp, err := r.Clients.SiteVerification.WebResource.Get(data.SiteID()).Context(ctx).Do()
 	if err != nil {
 		return err
 	}
@@ -442,7 +446,7 @@ func (r *SiteVerificationResource) patchSiteVerification(ctx context.Context, di
 	tflog.Trace(ctx, "Request", map[string]any{
 		"request": greq,
 	})
-	callResp, err := r.Clients.SiteVerification.WebResource.Patch(data.SiteIdentifier.ValueString(), greq).Context(ctx).Do()
+	callResp, err := r.Clients.SiteVerification.WebResource.Patch(data.SiteID(), greq).Context(ctx).Do()
 	if err != nil {
 		return err
 	}
@@ -460,13 +464,13 @@ func (r *SiteVerificationResource) patchSiteVerification(ctx context.Context, di
 func (r *SiteVerificationResource) buildSiteVerification(ctx context.Context, data *SiteVerificationResourceModel) (*sitev1.SiteVerificationWebResourceResource, error) {
 	greq := &sitev1.SiteVerificationWebResourceResource{
 		Site: &sitev1.SiteVerificationWebResourceResourceSite{
-			Identifier: data.SiteIdentifier.ValueString(),
+			Identifier: strings.TrimSuffix(data.SiteIdentifier.ValueString(), "."),
 			Type:       data.SiteType.ValueString(),
 		},
 	}
-	// if r.Clients.DefaultOwner != "" {
-	// 	greq.Owners = append(greq.Owners, r.Clients.DefaultOwner)
-	// }
+	if r.Clients.DefaultOwner != "" {
+		greq.Owners = append(greq.Owners, r.Clients.DefaultOwner)
+	}
 	if !data.Owners.IsNull() {
 		owners, err := parseOwnersFromData(ctx, data)
 		if err != nil {
@@ -482,5 +486,5 @@ func (r *SiteVerificationResource) deleteSiteVerification(ctx context.Context, d
 		"id":   data.ID.ValueString(),
 		"site": data.SiteIdentifier.ValueString(),
 	})
-	return r.Clients.SiteVerification.WebResource.Delete(data.EncodedID()).Context(ctx).Do()
+	return r.Clients.SiteVerification.WebResource.Delete(data.SiteID()).Context(ctx).Do()
 }
