@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-provider "scaffolding" {
+provider "googlesiteverification" {
   # example configuration here
 }
 ```

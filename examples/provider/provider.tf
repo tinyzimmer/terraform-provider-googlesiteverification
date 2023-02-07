@@ -1,3 +1,3 @@
-provider "scaffolding" {
+provider "googlesiteverification" {
   # example configuration here
 }
