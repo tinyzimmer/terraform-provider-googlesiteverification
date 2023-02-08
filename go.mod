@@ -3,7 +3,7 @@ module github.com/hashicorp/terraform-provider-googlesiteverification
 go 1.18
 
 require (
-	cloud.google.com/go/iam v0.8.0
+	cloud.google.com/go/iam v0.10.0
 	github.com/hashicorp/terraform-plugin-docs v0.13.0
 	github.com/hashicorp/terraform-plugin-framework v1.1.1
 	github.com/hashicorp/terraform-plugin-log v0.7.0
